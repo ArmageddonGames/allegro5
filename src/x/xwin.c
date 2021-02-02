@@ -162,7 +162,7 @@ static int use_bgr_palette_hack = FALSE; /* use BGR hack for color conversion pa
 int _xwin_missed_input;
 #endif
 
-#define X_MAX_EVENTS   5
+#define X_MAX_EVENTS   50
 #define MOUSE_WARP_DELAY   200
 
 static char _xwin_driver_desc[256] = EMPTY_STRING;
@@ -2722,10 +2722,10 @@ static void _xwin_private_set_window_name(AL_CONST char *name, AL_CONST char *gr
    else
       _al_sane_strncpy(_xwin.application_class, group, sizeof(_xwin.application_class));
 
-   if (_xwin.window != None) {
+   if (_xwin.wm_window != None) {
       hint.res_name = _xwin.application_name;
       hint.res_class = _xwin.application_class;
-      XSetClassHint(_xwin.display, _xwin.window, &hint);
+      XSetClassHint(_xwin.display, _xwin.wm_window, &hint);
    }
 }
 

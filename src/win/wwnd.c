@@ -19,6 +19,7 @@
 #include "allegro.h"
 #include "allegro/internal/aintern.h"
 #include "allegro/platform/aintwin.h"
+#include "wddraw.h"
 
 #ifndef SCAN_DEPEND
    #include <string.h>
@@ -381,6 +382,15 @@ static LRESULT CALLBACK directx_wnd_proc(HWND wnd, UINT message, WPARAM wparam, 
             return 0;
          }
          break;
+
+      case WM_QUERYNEWPALETTE:
+      case WM_PALETTECHANGED:
+         if ((HWND)wparam != wnd && gfx_directx_primary_surface) {
+            IDirectDrawSurface2_SetPalette(gfx_directx_primary_surface->id, ddpalette);
+            InvalidateRect(wnd, NULL, 1);
+            return 1;
+         }
+         break;
    }
 
    /* pass message to default window proc */
@@ -442,6 +452,7 @@ static HWND create_directx_window(void)
       return NULL;
    }
 
+   SetSystemPaletteUse(GetDC(wnd), SYSPAL_NOSTATIC256);
    ShowWindow(wnd, SW_SHOWNORMAL);
    SetForegroundWindow(wnd);
    UpdateWindow(wnd);
@@ -518,6 +529,9 @@ int init_directx_window(void)
    msg_call_proc = RegisterWindowMessage("Allegro call proc");
    msg_suicide = RegisterWindowMessage("Allegro window suicide");
 
+   /* initialize gfx critical section */
+   InitializeCriticalSection(&gfx_crit_sect);
+
    if (user_wnd) {
       /* initializes input module and requests dedicated thread */
       _win_input_init(TRUE);
@@ -559,9 +573,6 @@ int init_directx_window(void)
 	    return -1;
       }
    }
-
-   /* initialize gfx critical section */
-   InitializeCriticalSection(&gfx_crit_sect);
 
    /* save window style */
    old_style = GetWindowLong(allegro_wnd, GWL_STYLE);
